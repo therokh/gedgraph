@@ -1,7 +1,9 @@
 [
-    { "id": 1, "name": "Test Person", "born": "", "mother": 3, "father": 2, "sharedDNA": 153, "group": "Test" },
+    { "id": 1, "name": "Test Person", "born": "?", "mother": 3, "father": 2, "sharedDNA": 153, "group": "Test" },
     { "id": 2, "name": "Test Father", "born": 1948, "mother": 5, "father": 4, "sharedDNA": 324, "group": "Test" },
     { "id": 3, "name": "Test Mother", "born": 1921, "mother": 0, "father": 0, "sharedDNA": 0, "group": "Test" },
     { "id": 4, "name": "Test Paternal Grandfather", "born": 1928, "mother": 0, "father": 0, "sharedDNA": 0, "group": "Test" },
-    { "id": 5, "name": "Test Paternal Grandmother", "born": 1927, "mother": 0, "father": 0, "sharedDNA": 0, "group": "Test" }
+    { "id": 5, "name": "Test Paternal Grandmother", "born": 1927, "mother": 0, "father": 0, "sharedDNA": 0, "group": "Test" },
+    { "id": 6, "name": "Test Uncle", "born": "?", "mother": 5, "father": 4, "sharedDNA": 0, "group": "Test" },
+    { "id": 7, "name": "Test Half Cousin", "born": "?", "mother": 0, "father": 6, "sharedDNA": 0, "group": "Test" }
 ]
