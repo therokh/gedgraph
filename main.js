@@ -102,11 +102,23 @@ function drawGraph() {
     .nodeLabel(node => getNodeLabel(node))
     .nodeColor(node => {
         // Assign colour for sharedDNA nodes. More DNA = more green
-            if (node.sharedDNA > 0 ) {
-                return d3.interpolateGreens(normaliseColor(node.sharedDNA))
+        if (node.sharedDNA > 0 ) {
+            return d3.interpolateGreens(normaliseColor(node.sharedDNA))
+        }
+        // Also colour any neighbours
+        if (node.neighbors) {
+            var sharedDNANeighbor = false
+            node.neighbors.forEach(item => {
+                if (item.sharedDNA > 0) {
+                    sharedDNANeighbor = true
+                }
+            })
+            if (sharedDNANeighbor) {
+                return d3.interpolateOranges(0.5)
             } else {
-                return d3.interpolateReds(1)
+                return d3.interpolateReds(0.8)
             }
+        }
         }
     )
     // Override link label with more information
@@ -172,7 +184,7 @@ function getLinkLabel(link) {
 
 // Normalise sharedDNA values to colour scale
 function normaliseColor(val) {
-    var min = 1
+    var min = 7
     var max = 300
     // eg. (300 - 1) / (500 - 1) = 0.599
     return (val - min) / (max - min);
