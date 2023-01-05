@@ -5,7 +5,7 @@ const peopleData = {
 };
 
 // Load the peopleData nodes from file
-const fetchPromise = fetch('example.json')
+const fetchPromise = fetch('trees/jackson.json')
 
 fetchPromise.then(response => {
     return response.json()
@@ -13,10 +13,10 @@ fetchPromise.then(response => {
 .then(jsonresponse => {
     peopleData.nodes = jsonresponse
     createNodeLinks()
+    markUpstreamColours()
 })
 .then(drawGraph)
 
-// 
 const highlightNodes = new Set();
 const highlightLinks = new Set();
 let hoverNode = null;
@@ -28,8 +28,6 @@ gui.add(controls, 'DAG Orientation', ['td', 'bu', 'lr', 'rl', 'zout', 'zin', 'ra
     .onChange(orientation => Graph && Graph.dagMode(orientation));
 
 const Graph = ForceGraph3D()
-
-// 
 
 function createNodeLinks() {
     var colourLink = ""
@@ -57,7 +55,7 @@ function createNodeLinks() {
                     target: peopleData.nodes[i].mother,
             })}
         };
-    
+
         if ( peopleData.nodes[i].father != 0 ) {
             if ( colourLink ) {
                 peopleData.links.push({
@@ -73,7 +71,7 @@ function createNodeLinks() {
             };
         }
     }
-    
+
     // Cross-link node objects
     peopleData.links.forEach(link => {
         const source = peopleData.nodes.find(node => node.id === link.source)
@@ -83,13 +81,40 @@ function createNodeLinks() {
         !target.neighbors && (target.neighbors = []);
         source.neighbors.push(target);
         target.neighbors.push(source);
-    
+
         !source.links && (source.links = []);
         !target.links && (target.links = []);
         source.links.push(link);
         target.links.push(link);
         }
     );
+}
+
+function markUpstreamColours() {
+    // Mark all sharedDNA node parents as upstreamColour
+    peopleData.nodes.filter(node => node.sharedDNA > 0).forEach(node => {
+        console.log("SharedDNA node", node.name, ", recursing parents")
+        // Then recursively update each parent if they exist
+        markUpstreamColoursRecurse(node)
+    })
+    // TODO: After we've marked all nodes, we need to re-traverse the tree backwards (from leaves) and uncolour until we find a branch that contains a sharedDNA end
+
+    // TODO: Iterate over all nodes with sharedDNA and try finding path back to centre.
+    // TODO: Each link to parent in the path will need to be recoloured and resized
+    // TODO: Each sharedDNA node attempt to find path back to root node, any nodes in between are marked green.
+}
+
+function markUpstreamColoursRecurse(node) {
+    node.neighbors.forEach(item => {
+        if (node.father === item.id) {
+            item.upstreamColour = true
+            markUpstreamColoursRecurse(item)
+        }
+        if (node.mother === item.id) {
+            item.upstreamColour = true
+            markUpstreamColoursRecurse(item)
+        }
+    })
 }
 
 function drawGraph() {
@@ -103,24 +128,16 @@ function drawGraph() {
     .nodeColor(node => {
         // Assign colour for sharedDNA nodes. More DNA = more green
         if (node.sharedDNA > 0 ) {
+            //console.log("SharedDNA node", node.name)
             return d3.interpolateGreens(normaliseColor(node.sharedDNA))
         }
-        // Also colour any neighbours
-        if (node.neighbors) {
-            var sharedDNANeighbor = false
-            node.neighbors.forEach(item => {
-                if (item.sharedDNA > 0) {
-                    sharedDNANeighbor = true
-                }
-            })
-            if (sharedDNANeighbor) {
-                return d3.interpolateOranges(0.5)
-            } else {
-                return d3.interpolateReds(0.8)
-            }
+
+        if (node.upstreamColour) {
+            return d3.interpolateOranges(0.5)
+        } else {
+            return d3.interpolateReds(0.8)
         }
-        }
-    )
+    })
     // Override link label with more information
     .linkLabel(link => getLinkLabel(link))
     .linkWidth(link => highlightLinks.has(link) ? 4 : 1)
@@ -138,7 +155,6 @@ function drawGraph() {
             node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
             node.links.forEach(link => highlightLinks.add(link));
         }
-
         hoverNode = node || null;
 
         updateHighlight();
@@ -156,8 +172,6 @@ function drawGraph() {
         updateHighlight();
     })
 }
-// TODO: Iterate over all nodes with sharedDNA and try finding path back to centre.
-// TODO: Each link to parent in the path will need to be recoloured and resized
 
 function updateHighlight() {
 // trigger update of highlighted objects in scene
